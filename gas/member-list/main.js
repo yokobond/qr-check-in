@@ -303,15 +303,34 @@ function fillEmptyMemberId() {
  */
 function copyRegisterToData() {
     const registerSheet = activeSpreadSheet.getSheetByName('Register');
+    const registerValues = registerSheet.getDataRange().getValues();
     const dataSheet = activeSpreadSheet.getSheetByName('Data');
-    const registerFirstRow = 2;
     const registerLastRow = registerSheet.getLastRow();
     const registerEmailColumn = 2;
+
+    const allMemberData = dataSheet.getDataRange().getValues();
+    const lastIDDate = new Date(allMemberData[allMemberData.length - 1][registerDateColumn - 1]);
+    let registerFirstRow = 2;
+    for (let i = 2; i < registerValues.length; i++) {
+        let registerDate = new Date(registerValues[i][0]);
+        if (registerDate < lastIDDate) {
+            continue;
+        }
+        registerFirstRow = i;
+    }
+
     for (let i = registerFirstRow; i <= registerLastRow; i++) {
         let email = registerSheet.getRange(i, registerEmailColumn);
+        let exist = false;
         if (!email.isBlank()) {
-            let memberData = getMemberDataByEmail(email.getValue());
-            if (memberData) {
+            for (let memberIndex = 0; memberIndex < allMemberData.length; memberIndex++) {
+                if (allMemberData[memberIndex][emailColumn - 1] == email) {
+                    Logger.log(`Skip for existing email: ${email}`);
+                    exist = true;
+                    break;
+                }
+            }
+            if (exist) {
                 continue;
             }
         }
